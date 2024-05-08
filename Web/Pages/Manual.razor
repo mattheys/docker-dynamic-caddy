@@ -1,0 +1,96 @@
+﻿@page "/manual"
+
+@using Domain;
+@using Domain.Models;
+@inject IAppData data
+@inject IDialogService DialogService
+
+<PageTitle>Manual Proxies</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Manual Proxies</MudText>
+
+<MudDataGrid T="Data" Items="proxies" Filterable="true" Groupable="true">
+    <ToolBarContent>
+        <MudIconButton Icon="@Icons.Material.Filled.Add" ButtonType="ButtonType.Button" Variant="Variant.Filled" OnClick="ShowAdd" />
+    </ToolBarContent>
+    <Columns>
+        <TemplateColumn GroupBy="q=>q.DnsName" Title="DnsName" SortBy="s=>s.DnsName">
+            <CellTemplate>
+                <MudLink Href="@context.Item.DnsName" Target="_blank">@context.Item.DnsName</MudLink>
+            </CellTemplate>
+        </TemplateColumn>
+        <TemplateColumn GroupBy="q=>q.Target" Title="Target" SortBy="s=>s.Target">
+            <CellTemplate>
+                <MudLink Href="@context.Item.Target" Target="_blank">@context.Item.Target</MudLink>
+            </CellTemplate>
+        </TemplateColumn>
+        <TemplateColumn Filterable="false" Groupable="false" Sortable="false" ShowColumnOptions="false">
+            <HeaderTemplate></HeaderTemplate>
+            <CellTemplate>
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" ButtonType="ButtonType.Button" Variant="Variant.Filled" OnClick="@((e)=>Delete(context.Item.Proxy))" />
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+</MudDataGrid>
+
+@code {
+    Data[] proxies;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.CompletedTask;
+        data.Updated += async () => await Update();
+        
+        await Update();
+    }
+
+    async Task Update()
+    {
+        proxies = await GetList();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    async Task Delete(ManualProxy proxy)
+    {
+        await data.Delete(proxy);
+        await Update();
+    }
+
+    async Task ShowAdd()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var reference = await DialogService.ShowAsync<Add>("Simple Dialog", options);
+
+        var result = await reference.Result;
+
+        await Update();
+
+    }
+
+    public class Data
+    {
+        public string Target { get; set; }
+        public string DnsName { get; set; }
+        public ManualProxy Proxy { get; set; }
+    }
+
+
+    async Task<Data[]> GetList()
+    {
+        await Task.CompletedTask;
+        List<Data> r = new();
+        var d = await data.Get();
+        foreach (var proxy in d)
+        {
+            r.Add(new Data()
+                {
+                    DnsName = $"https://{proxy.DnsName}",
+                    Target = $"http://{proxy.TargetHostName}:{proxy.TargetPort}",
+                    Proxy = proxy
+                });
+
+        }
+        return r.ToArray();
+
+    }
+}

@@ -1,0 +1,55 @@
+﻿@using Domain.Models;
+@using Domain;
+
+@inject ISnackbar SnackBar
+@inject IAppData data
+
+<EditForm Model="@manualProxy" OnValidSubmit="OnValidSubmit" OnInvalidSubmit="OnInvalidSubmit" Context="customContext">
+    <DataAnnotationsValidator />
+    <MudDialog>
+        <TitleContent>
+            <MudText Typo="Typo.h5">
+                Add / Edit
+            </MudText>
+        </TitleContent>
+        <DialogContent>
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudText Color="@Color.Error">
+                        <ValidationSummary />
+                    </MudText>
+                    <MudTextField Class="mt-4" Variant="Variant.Outlined" Label="DNS Name" @bind-Value="@manualProxy.DnsName" />
+
+                    <MudTextField Class="mt-4" Variant="Variant.Outlined" Label="Target HostName" @bind-Value="@manualProxy.TargetHostName" />
+                    <MudNumericField Class="mt-4" Variant="Variant.Outlined" Label="Target Port" @bind-Value="@manualProxy.TargetPort" />
+                    
+                    @* <UserSearch Class="@Constants.FormClass" Variant="Constants.FormVariant" Label="Delegate User" @bind-Value="@delegateSecurity.DelegateUserId" />
+                    <Flags Class="@Constants.FormClass" Variant="Constants.FormVariant" TItem="CCM.Data.Enums.DelegatePermissionFlags" IgnoreValue="DelegatePermissionFlags.None" @bind-Value="delegateSecurity.Permissions" Label="Permissions" MultiSelect="true" />
+                    <MudCheckBox Class="@Constants.FormClass" Variant="Constants.FormVariant" Label="Is Active" @bind-Checked="delegateSecurity.IsActive" /> *@
+                </MudItem>
+            </MudGrid>
+        </DialogContent>
+        <DialogActions>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mr-4">Save</MudButton>
+        </DialogActions>
+    </MudDialog>
+</EditForm>
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    ManualProxy manualProxy = new ManualProxy();
+
+    private void OnInvalidSubmit(EditContext context)
+    {
+        SnackBar.Add("Validation errors detected", Severity.Error);
+    }
+
+    private void OnValidSubmit(EditContext context)
+    {
+
+        data.Add(manualProxy);
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+}
